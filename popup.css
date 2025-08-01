@@ -1,0 +1,77 @@
+#battery-popup {
+  width: 300px;
+  background: #f5f5f5;
+  border: 2px solid #999;
+  border-radius: 10px;
+  padding: 15px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  font-family: sans-serif;
+  text-align: center;
+}
+
+/* Battery housing box */
+.battery-box {
+  background-color: #ddd;
+  padding: 20px;
+  margin-bottom: 10px;
+  border-radius: 6px;
+  position: relative;
+}
+
+/* Terminals */
+.terminal {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  position: absolute;
+  border: 2px solid #333;
+}
+
+.positive {
+  background-color: red;
+  top: 10px;
+}
+
+.negative {
+  background-color: black;
+  bottom: 10px;
+}
+
+/* Individual terminal positions */
+#positive1 { left: 30px; }
+#positive2 { left: 80px; }
+#positive3 { left: 130px; }
+
+#negative1 { left: 50px; }
+#negative2 { left: 100px; }
+
+/* Measurement Boxes */
+.measurements {
+  display: flex;
+  justify-content: space-around;
+  margin: 10px 0;
+}
+
+.measurement {
+  background-color: #eee;
+  padding: 8px 12px;
+  border-radius: 5px;
+  border: 1px solid #aaa;
+  font-weight: bold;
+}
+
+/* Toggle Load Button */
+#toggleLoadBtn {
+  padding: 8px 16px;
+  background-color: #0078d4;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: bold;
+  transition: background 0.3s ease;
+}
+
+#toggleLoadBtn:hover {
+  background-color: #005fa3;
+}
