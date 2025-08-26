@@ -98,7 +98,12 @@
       border: 1px solid #aaa;
       border-radius: 5px;
     }
- 
+
+
+    }
+
+
+    }
 #testSwitchBtn {
   padding: 10px;
   background-color: #ffa500;
@@ -204,203 +209,503 @@
 
 <script>
 
+  let nutClosed = true;
 let redClip = null;
 let blackClip = null;
+let clipStage = 0;
+let testMode = "amps";
+let fuseBlown = false;
+let testSwitchPressed = false;
+let overrideComplete = false;
 
+function calculateAmps() {
+  if (fuseBlown) return "-- (Fuse Blown)";
+  if (redClip === blackClip) return "-- (Leads on same terminal)";
+  if (!redClip || !blackClip) return "--";
 
+  const meterIn = redClip === "POS1" && blackClip === "POS3";
+  const nutOpen = !nutClosed;
 
-// START OF SUB ROUTINE SYSTEM 
-
-
-// report connection when press volts and lock neg1 sub routine
-
-function reportConnectRedLead() {
-  document.getElementById("volts-display").textContent = "Volts: 0 V";
-  document.getElementById("amps-display").textContent = "Amps: --";
-  
-  // Simulate auto-connection of black lead to NEG1
-  document.getElementById("blackClipStatus").textContent = "Black lead auto-connected to NEG1.";
+  if (testSwitchPressed && meterIn && nutOpen)
+    return overrideComplete ? "7.0A" : "1.0A";
+  if (testSwitchPressed && meterIn && nutClosed) return "0.0A";
+  if (meterIn && nutOpen) return overrideComplete ? "5.0A" : "20.0A";
+  if (meterIn && nutClosed) return "0.0A";
+  if (nutOpen) return "5.0A";
+  return "0.0A";
 }
 
-// volts reading logic woith toggle of nut
+function calculateCrossingStatus() {
+  const meterIn = redClip === "POS1" && blackClip === "POS3";
+  const nutOpen = !nutClosed;
 
-let nutIsOpen = false; // initial state
+  if (meterIn && testSwitchPressed) return "GATE DOWN METER IN";
+  if (meterIn && !testSwitchPressed) return "GATE UP METER IN";
+  if (nutOpen || testSwitchPressed) return "GATE DOWN";
+  return "GATE NORMAL";
+}
 
-function handleNutToggle() {
-  nutIsOpen = !nutIsOpen; // flip the state
 
+  // Nut toggle + crossing status
+  
+  console.log("Nut toggle triggered. New state:", nutClosed);
+
+  document.getElementById("goldNutBtn").addEventListener("click", () => {
+
+
+
+  // Flip nut state
+
+  nutClosed = !nutClosed;
+  document.getElementById("goldNutBtn").textContent = nutClosed ? "Open Test Nut" : "Close Test Nut";
+  updateCrossingStatus();
+
+if (testSwitchPressed && meterIn && testMode === "amps") {
+  if (!nutClosed) {
+   updateDisplay();
+  } else {
+    updateDisplay();
+  }
+}
+
+
+ // Recalculate amps if in amps mode
+
+  if (testMode === "amps" && redClip && blackClip) {
+  if (redClip === blackClip) {
+    updateDisplay();
+    
+    return;
+  }
+  
+  }
+
+
+  // Update status display
+
+   const statusText = nutClosed ? "Nut is closed." : "Nut is open.";
+   document.getElementById("nutStatus").textContent = statusText;
+
+  // Update volts display if in voltage mode
+  if (testMode === "voltage" && redClip) {
+  let volts = "0V";
+  if (redClip === "POS1") {
+    volts = "12V";
+  } else if ((redClip === "POS2" || redClip === "POS3") && nutClosed) {
+    volts = "12V";
+  }
+  document.getElementById("volts-display").textContent = `Volts (${redClip}): ${volts}`;
+  }
+
+
+  // Change crossing logic (just for visual realism)
+
+  
+
+
+  // Recalculate amps if in amps mode and both leads are clipped
+
+  if (testMode === "amps" && redClip && blackClip) {
+  let amps = "--";
+  const isNutOpen = !nutClosed;
+  const meterInCircuit = redClip && blackClip;
+
+
+  if (isNutOpen && meterInCircuit) {
+    amps = "5.0A";
+    gateState = "GATE NORMAL";
+  } else if (nutClosed && meterInCircuit) {
+    amps = "0.0A";
+    gateState = "GATE NORMAL";
+  } else {
+    amps = "--";
+    gateState = "METER OUT";
+  }
+
+  updateDisplay();
+  
+  }
+
+  // Update POS2 and POS3 visibility based on nut state
 
   const pos2 = document.getElementById("positive2");
-  const nutStatus = document.getElementById("nutStatus");
+  const pos3 = document.getElementById("positive3");
 
-  if (nutIsOpen) {
-    // Nut is now open
-    nutStatus.textContent = "Nut is open.";
-    pos2.style.backgroundColor = "#f9d976"; // lighter gold
-    pos2.style.borderColor = "#e6c56e";
-  } else {
-    // Nut is now closed
-    nutStatus.textContent = "Nut is closed.";
-    pos2.style.backgroundColor = "#d4af37"; // normal gold
-    pos2.style.borderColor = "#b8860b";
-  }
+  if (!nutClosed) {
+  // Nut is open – dim POS2 
+  pos2.style.opacity = "0.3";
+  
 
-  // Voltage logic inside nut toggler 
+  // Clear red lead if clipped to inactive terminal
 
-  if (currentMode === "volts") {
   if (redClip === "POS2" || redClip === "POS3") {
-  document.getElementById("volts-display").textContent = nutIsOpen ? "Voltage: 0V" : "Voltage: 12V";
-} else if (redClip === "POS1") {
-  document.getElementById("volts-display").textContent = "Voltage: 12V";
-}
-}
-}
-
-  // updates voltage after clip change 
-
-  function handleClipChange(newClip) {
-  redClip = newClip;
-  updateVoltageDisplay(); // ← this ensures voltage updates live
-  if (currentMode === "volts" && redLeadClipped) {
-  updateVoltageDisplay();
-}
-}
-
-
-
-// volts reading logic with no toggle of nut
-
-function updateVoltageDisplay() {
-  const voltsDisplay = document.getElementById("volts-display");
-
-if (currentMode === "volts") {
-  if (redClip === "POS1") {
-    voltsDisplay.textContent = "Voltage: 12V";
-  } else if ((redClip === "POS2" || redClip === "POS3") && !nutIsOpen) {
-    voltsDisplay.textContent = "Voltage: 12V";
-  } else {
-    voltsDisplay.textContent = "Voltage: 0V";
-  }
-
-}
-}
-
-// measure amps sub routine
-
-function handleMeasureAmps() {
-  document.getElementById("volts-display").textContent = "Voltage: --";
-  let amps = "0A";
-  let crossingStatus = "";
-
-  // Nut is open and correct clips are in place
-  if (nutIsOpen && redClip === "POS1" && blackClip === "POS3") {
-    amps = "5A";
-    crossingStatus = "Gate Normal meter in";
-  }
-  // Nut is open but clips are wrong or missing
-  else if (nutIsOpen && (redClip !== "POS1" || blackClip !== "POS3")) {
-    amps = "0A";
-    crossingStatus = "Gate Down";
-  }
-  // Nut is closed — default state
-  else {
-    amps = "0A";
+    redClip = null;
+    clipStage = 0;
+    document.getElementById("clipStatus").textContent = "Red lead needs re-clipping.";
+    document.getElementById("volts-display").textContent = "Volts: --";
+    updateDisplay();
     
+
+  }
+  } else {
+
+  // Nut is closed – restore full visibility
+
+  pos2.style.opacity = "1";
+  pos3.style.opacity = "1";
   }
 
-
-  // Special case: redClip on POS2 and nut is closed, then opened
-  if (redClip === "POS2" && nutIsOpen) {
-    amps = "0A";
-    crossingStatus = "Gate Down";
+if (
+  testSwitchPressed &&
+  testMode === "amps" &&
+  redClip === "POS1" &&
+  blackClip === "POS3"
+) {
+  if (nutClosed) {
+    updateDisplay();
+  } else {
+    const crossingText = document.getElementById("crossingStatus").textContent;
+    if (crossingText.includes("GATE NORMAL")) {
+      updateDisplay();
+    }
   }
+}
+  });
+
+function updateDisplay() {
+  document.getElementById("amps-display").textContent = `Amps: ${calculateAmps()}`;
+  document.getElementById("crossingStatus").textContent = `Crossing Status: ${calculateCrossingStatus()}`;
+
+  
+}
+
+
+
+  // Step 1: Clip Red Lead
+
+    document.getElementById("clipRedBtn").addEventListener("click", () => {
+  const selected = document.querySelector('input[name="redTerminal"]:checked');
+  redClip = selected ? selected.value : null;
+
+  clipStage = 1;
+  document.getElementById("clipStatus").textContent = `Red lead clipped to ${redClip}.`;
+  updateDisplay();
+
  
 
-  // Update UI
+  
 
-  document.getElementById("amps-display").textContent = `Current: ${amps}`;
+  if (testMode === "voltage") {
+    blackClip = "NEG1";
+    document.getElementById("blackClipStatus").textContent = "Black lead automatically placed on NEG1 (voltage test)";
+    document.getElementById("blackTerminalSelection").style.display = "none";
 
-  if (crossingStatus) document.getElementById("crossingStatus").textContent = crossingStatus;
+    // Voltage preview logic if needed
 
-  reportConnectionRedLead(); // still validate red lead
-}
+    let volts = "0V";
+    const activeWhenNutOpen = redClip === "POS1";
+    if (nutClosed || activeWhenNutOpen) {
+      volts = "12V";
+    }
+    document.getElementById("volts-display").textContent = `Volts: ${volts}`;
+    updateDisplay();
+    } else if (testMode === "amps") {
+
+    // For amps test, wait until black lead is manually clipped to POS3
+
+    document.getElementById("blackClipStatus").textContent = "Ready to clip black lead for current test.";
+    document.getElementById("blackTerminalSelection").style.display = "block";
+    document.getElementById("volts-display").textContent = "Volts: --";
+    updateDisplay();
 
 
-// mode volts or amps result sub routine
-
-function updateMeasurement() {
-  if (currentMode === "volts") {
-    updateVoltageDisplay();
-  } else if (currentMode === "amps") {
-    handleMeasureAmps();
   }
-}
+  if (testMode === "amps") {
+  performAmpsMeasurement();
+  }
+  });
 
+  // Step 2: Clip Black Lead
 
+  document.getElementById("clipBlackBtn").addEventListener("click", () => {
+  const selected = document.querySelector('input[name="blackTerminal"]:checked');
+  blackClip = selected ? selected.value : null;
 
-// EVENTS TO CALL SUB ROUTINES
+  if (clipStage !== 1) {
+    document.getElementById("blackClipStatus").textContent = "Please clip red lead first.";
+    return;
+  }
 
-// start out blank and select measure 
+  clipStage = 2;
+  document.getElementById("blackClipStatus").textContent = `Black lead clipped to ${blackClip}.`;
 
-window.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("volts-display").textContent = "Volts: --";
-  document.getElementById("amps-display").textContent = "Amps: --";
-});
+  // Trigger amps read immediately if in amps mode
+  function performAmpsMeasurement() {
+  if (testMode !== "amps" || !redClip || !blackClip) return;
 
-// measure volts button click result
+  let amps = "--";
+  let gateState = "METER OUT";
+  const isNutOpen = !nutClosed;
 
-document.getElementById("measureVoltsBtn").addEventListener("click", () => {
-  currentMode = "volts";
-  document.getElementById("volts-display").textContent = "Volts: 0 V";
-  document.getElementById("amps-display").textContent = "Current: --";
-  updateMeasurement(); // Re-check clips and nut
-});
-
-// red lead clip logic volts 
-
-document.getElementById("clipRedBtn").addEventListener("click", () => {
-  const selected = document.querySelector('input[name="redTerminal"]:checked');
-  const redTerminal = selected ? selected.value : null;
-
-  if (redTerminal) {
-    handleClipChange(redTerminal); // ← use your subroutine here
-    document.getElementById("clipStatus").textContent = `Red lead clipped to ${redTerminal}.`;
+  if (redClip === blackClip) {
+    amps = "--";
+    gateState = "Invalid lead configuration";
+  } else if (
+    (redClip === "POS2" && blackClip === "POS3") ||
+    (redClip === "POS3" && blackClip === "POS2")
+  ) {
+    amps = "0.0A";
+    gateState = isNutOpen ? "GATE DOWN" : "GATE NORMAL";
+  } else if (
+    (redClip === "POS1" && blackClip === "POS3") ||
+    (redClip === "POS3" && blackClip === "POS1")
+  ) {
+    if (isNutOpen) {
+      amps = "20.0A";
+      gateState = "GATE UP METER IN";
+      updateDisplay();
+     
+      setTimeout(() => {
+        updateDisplay();
+        updateCrossingStatus();
+      }, 5000);
+      return;
+    } else {
+      amps = "0.0A";
+      gateState = "GATE NORMAL";
+    }
   } else {
-    document.getElementById("clipStatus").textContent = "Please select a red terminal.";
-    document.getElementById("volts-display").textContent = "Voltage: --";
+    amps = isNutOpen ? "5.0A" : "0.0A";
+    gateState = isNutOpen ? "GATE DOWN" : "GATE NORMAL";
+  }
+
+function updateMeterReadings() {
+  if (testMode === "amps") {
+    if (redClip === "POS1" && blackClip === "POS3" && nutClosed) {
+      updateDisplay();
+
+      setTimeout(() => {
+        updateDisplay();
+        updateCrossingStatus(); // Optional: recheck gate status after surge
+      }, 5000);
+    } else {
+      updateDisplay();
+    }
+  }
+}
+
+  updateDisplay();
+  
+  }
+
+  if (testMode === "amps") {
+  performAmpsMeasurement();
   }
 
 
-if (currentMode === "volts" && redLeadClipped) {
-  updateVoltageDisplay();
+
+  });
+
+  // Step 3: Measure Voltage
+
+     document.getElementById("measureVoltsBtn").addEventListener("click", () => {
+     testMode = "voltage";
+
+updateDisplay();
+
+
+  // Check if we were previously in amps mode and clipped across POS1 and POS3 with nut open
+
+  if (
+  redClip === "POS1" &&
+  blackClip === "POS3" &&
+  !nutClosed
+  ) {
+  updateDisplay();
+  }
+
+    // Unclip leads and update crossing status based on nut state
+
+    redClip = null;
+    blackClip = null;
+    clipStage = 0;
+    document.getElementById("clipStatus").textContent = "Red lead not clipped yet.";
+    document.getElementById("blackClipStatus").textContent = "Black lead not clipped yet.";
+    document.getElementById("volts-display").textContent = "Volts: --";
+    updateDisplay();
+
+  if (!nutClosed) {
+  updateDisplay();
+} else {
+  // Check throw test switch state
+  const testSwitchBtn = document.getElementById("testSwitchBtn");
+  const isTestSwitchPressed = testSwitchBtn.style.backgroundColor === "#d88c00"; // darker = pressed
+
+  if (!nutClosed || testSwitchPressed) {
+  updateDisplay();
+} else {
+  updateDisplay();
+}
 }
 
+  // Hide black terminal selector and POS1–POS3 (only now!)
+  document.getElementById("blackTerminalSelection").style.display = "none";
+
+
+  // Auto-clip black lead to NEG1
+
+  blackClip = "NEG1";
+  document.getElementById("blackClipStatus").textContent = "Black lead automatically placed on NEG1 (voltage test)";
+
+  // Clear amps display
+
+  updateDisplay();
+
+  // Validate red clip presence
+
+  if (!redClip) {
+    document.getElementById("volts-display").textContent = "Volts: -- (Red lead not clipped)";
+    return;
+  }
+
+  let volts = "0V";
+  const isNutOpen = !nutClosed;
+
+  if (redClip === "POS1") {
+  volts = "12V"; // POS1 always active
+  } else if ((redClip === "POS2" || redClip === "POS3") && nutClosed) {
+  volts = "12V"; // POS2/POS3 only active when nut is closed
+  } else {
+  volts = "0V"; // Otherwise, no voltage
+  }
+  document.getElementById("volts-display").textContent = `Volts: ${volts}`;
+
+overrideComplete = false;
+  });
+
+
+  // Measure amps
+
+  document.getElementById("measureAmpsBtn").addEventListener("click", () => {
+  testMode = "amps";
+
+
+  //fuse blown logic
+
+  const isClippedAcrossPower = (
+  redClip &&
+  blackClip === "NEG1" &&
+  (
+    redClip === "POS1" ||
+    ((redClip === "POS2" || redClip === "POS3") && nutClosed)
+  )
+  );
+
+  if (isClippedAcrossPower) {
+  fuseBlown = true;
+  updateDisplay();
+  document.getElementById("fuseIndicator").style.display = "block";
+  return;
+  }
+
+  // Unclip leads and update crossing status based on nut state
+
+  redClip = null;
+  blackClip = null;
+  clipStage = 0;
+  document.getElementById("clipStatus").textContent = "Red lead not clipped yet.";
+  document.getElementById("blackClipStatus").textContent = "Black lead not clipped yet.";
+  document.getElementById("volts-display").textContent = "Volts: --";
+  updateDisplay();
+
+  // Reset gateState based on nut state alone
+
+   if (!nutClosed) {
+  updateDisplay();
+} else {
+  // Check throw test switch state
+  const testSwitchBtn = document.getElementById("testSwitchBtn");
+  const isTestSwitchPressed = testSwitchBtn.style.backgroundColor === "#d88c00"; // darker = pressed
+
+  if (!nutClosed || testSwitchPressed) {
+  updateDisplay();
+} else {
+  updateDisplay();
+}
+}
+  // Show terminals and black clip selector again for amp testing
+
+  document.getElementById("positive1").style.display = "block";
+  document.getElementById("positive2").style.display = "block";
+  document.getElementById("positive3").style.display = "block";
+  document.getElementById("blackTerminalSelection").style.display = "block";
+  document.getElementById("blackClipStatus").textContent = "";
+
+  });
+
+ //Unclip leads logic
+
+  document.getElementById("unclipLeadsBtn").addEventListener("click", () => {
+  redClip = null;
+  blackClip = null;
+  clipStage = 0;
+  document.getElementById("volts-display").textContent = "Volts: --";
+  updateDisplay();
+
+updateDisplay();
+
+
+overrideComplete = false;
+  });
+
+
+  document.getElementById("resetFuseBtn").addEventListener("click", () => {
+  fuseBlown = false;
+  document.getElementById("fuseIndicator").style.display = "none";
+  updateDisplay();
+  });
+
+  //Crossing Test Switch
+
+document.getElementById("testSwitchBtn").addEventListener("click", () => {
+  const testSwitchBtn = document.getElementById("testSwitchBtn");
+  const meterIn = (testMode === "amps" && redClip === "POS1" && blackClip === "POS3");
+
+  testSwitchPressed = !testSwitchPressed;
+
+  if (testSwitchPressed) {
+    testSwitchBtn.style.backgroundColor = "#d88c00";
+    testSwitchBtn.style.boxShadow = "inset 0 0 5px #000";
+
+    if (!nutClosed && (meterIn || redClip === "POS1")) {
+      updateDisplay();
+      
+
+      setTimeout(() => {
+        updateDisplay();
+      }, 5000);
+
+      overrideComplete = true;
+    }
+
+    if (overrideComplete && meterIn && !nutClosed) {
+      updateDisplay();
+      setTimeout(() => {
+        updateDisplay();
+      }, 5000);
+    }
+
+    if (nutClosed && meterIn) {
+      updateDisplay();
+    }
+
+  } else {
+    testSwitchBtn.style.backgroundColor = "#ffa500";
+    testSwitchBtn.style.boxShadow = "none";
+  }
+
+  updateCrossingStatus();
 });
-
-// unclip leads
-
-document.getElementById("unclipLeadsBtn").addEventListener("click", () => {
-  redClip = null; // clear red lead latch
-  document.getElementById("clipStatus").textContent = "Leads unclipped.";
-  document.getElementById("volts-display").textContent = "Voltage: 0V"; // reset volts display
-});
-
-// nut open button click
-
-document.getElementById("goldNutBtn").addEventListener("click", handleNutToggle);
-
-
-// measure amps button click
-
-document.getElementById("measureAmpsBtn").addEventListener("click", () => {
-  currentMode = "amps";
-  document.getElementById("volts-display").textContent = "Voltage: --";
-  document.getElementById("amps-display").textContent = "Current: 0 A";
-  updateMeasurement(); // Re-check clips and nut
-});
-
-
-
 </script>
 
 
