@@ -1,7 +1,0 @@
-start git bash
-
-
-cd C:\\Users\\atefo\\batttest
-
-
-start index.html
