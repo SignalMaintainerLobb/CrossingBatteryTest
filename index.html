@@ -1,0 +1,708 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Battery Tester</title>
+  <style>
+
+
+/* corssing graphics */
+
+#crossing {
+  position: relative;
+  width: -200px;
+  height: -300px;
+  margin: 20px auto;
+}
+
+#mast {
+  position: absolute;
+  left: 100px;
+  top: 200px;
+  width: 20px;
+  height: 200px;
+  background-color: black;
+}
+
+.light {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background-color: white;
+  border: 2px solid black;
+}
+
+#light-left {
+  top: 40px;
+  left: -20px;
+}
+
+#light-right {
+  top: 40px;
+  left: 20px;
+}
+
+#gate-arm {
+  position: absolute;
+  top: 300px;
+  left: 100px;
+}
+
+.gate-line {
+  width: 150px;
+  height: 6px;
+  background-color: gray;
+  transform-origin: left center;
+  display: none;
+}
+
+.vertical {
+  transform: rotate(-90deg);
+}
+
+.diagonal {
+  transform: rotate(-45deg);
+}
+
+.horizontal {
+  transform: rotate(0deg);
+}
+
+
+
+
+/* Default button style (unpressed) */
+.test-switch-btn {
+  background-color: #f9d976; /* yellow */
+  border: 2px solid #b8860b;
+  color: #333;
+  padding: 10px 20px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* Pressed style (gate down) */
+.test-switch-btn-pressed {
+  background-color: #e74c3c !important;/* red */ 
+  border: 2px solid #c0392b !important;
+  color: white;
+}
+
+
+     /* hidden style on and off need */
+     .hidden {
+      display: none;
+      }
+
+
+    /* Battery Housing Container */
+    #battery-popup {
+      width: 300px;
+      margin: 50px auto;
+      padding: 20px;
+      background-color: #f5f5f5;
+      border: 2px solid #333;
+      border-radius: 10px;
+      font-family: sans-serif;
+
+    }
+
+    /* Battery Box */
+    .battery-box {
+      position: relative;
+      width: 100%;
+      height: 120px;
+      background-color: #c0c0c0;
+      border-radius: 8px;
+      margin-bottom: 20px;
+    }
+
+    /* Terminals */
+    .terminal {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      background-color: #333;
+      border-radius: 50%;
+    }
+
+    .positive {
+      background-color: red;
+    }
+
+    .negative {
+      background-color: black;
+    }
+
+    /* Positioning Terminals */
+    #positive1 { top: 10px; left: -300px; }
+    #positive2 {
+     top: 40px;
+     left: -301px;
+     background-color: gold;
+     border: 2px solid #cfa02c; /* Give it a little metallic definition */
+     cursor: pointer;           /* Suggest interactivity */
+}
+    #positive3 { top: 70px; left: -300px; }
+
+    #negative1 { bottom: 80px; left: -100px; }
+    #negative2 { bottom: 50px; left: -100px; }
+
+ /* Connection Lines */
+    .connection-line {
+      position: absolute;
+      height: 2px;
+      background-color: #000;
+    }
+
+#neg-connection {
+  left: -91px;              /* Move it toward the left */
+  top: 20px;               /* Set its vertical position */
+  width: 2px;              /* Skinny width since it's now vertical */
+  height: 30px;           /* Tall height to span vertically */
+  background-color: black; /* Line color */
+}
+
+
+#pos-connection {
+  left: -291px;              /* Move it toward the left */
+  top: 20px;               /* Set its vertical position */
+  width: 2px;              /* Skinny width since it's now vertical */
+  height: 60px;           /* Tall height to span vertically */
+  background-color: red; /* Line color */
+}
+
+
+    /* Measurements Display */
+    .measurements {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin-bottom: 10px;
+    }
+
+    .measurement {
+      font-weight: bold;
+      background: #fff;
+      padding: 5px;
+      border: 1px solid #aaa;
+      border-radius: 5px;
+    }
+ 
+#testSwitchBtn {
+  padding: 10px;
+  background-color: #ffa500;
+  border: none;
+  border-radius: 5px;
+  color: #000;
+  font-weight: bold;
+  margin-top: 10px;
+  cursor: pointer;
+  }
+
+#testSwitchBtn:hover {
+  background-color: #cc8400;
+  }
+
+#crossingStatus {
+  margin-top: 10px;
+  font-weight: bold;
+  }
+  </style>
+</head>
+
+<body>
+
+<!-- crossing graphics -->
+
+
+<div id="crossing">
+  <div id="mast">
+    <div class="light" id="light-left"></div>
+    <div class="light" id="light-right"></div>
+  </div>
+  <div id="gate-arm">
+    <div id="gate-up" class="gate-line vertical"></div>
+    <div id="gate-middle" class="gate-line diagonal"></div>
+    <div id="gate-down" class="gate-line horizontal"></div>
+  </div>
+</div>
+
+  <!-- Battery Tester Popup Interface -->
+  <div id="battery-popup">
+
+    <!-- Battery Housing -->
+    <div class="battery-box">
+
+      <!-- Terminals -->
+      <div class="terminal positive" id="positive1"></div>
+      <div class="terminal positive" id="positive2"></div>
+      <div class="terminal positive" id="positive3"></div>
+
+      <div class="terminal negative" id="negative1"></div>
+      <div class="terminal negative" id="negative2"></div>
+
+ <!-- Connection Lines -->
+      <div class="connection-line" id="neg-connection"></div>
+      <div class="connection-line" id="pos-connection"></div>
+    </div>
+
+
+    <!-- Measurement Display -->
+    <div class="measurements">
+      <div class="measurement" id="volts-display">Volts: --</div>
+      <div class="measurement" id="amps-display">Amps: --</div>
+    </div>
+
+
+<button id="measureVoltsBtn">Measure Volts</button>
+
+<button id="measureAmpsBtn">Measure Amps</button><br>
+
+<br>
+
+<div id="terminalSelection">
+  <label><input type="radio" name="redTerminal" value="POS1" checked /> POS1</label>
+  <label><input type="radio" name="redTerminal" value="POS2" /> POS2</label>
+  <label><input type="radio" name="redTerminal" value="POS3" /> POS3</label>
+</div>
+  
+<button id="clipRedBtn">Clip Red Lead</button>
+<div id="clipStatus">Red lead not clipped yet.</div>
+
+<br>
+
+<div id="blackTerminalSelection">
+  <label><input type="radio" name="blackTerminal" value="POS1" checked /> POS1</label>
+  <label><input type="radio" name="blackTerminal" value="POS2" /> POS2</label>
+  <label><input type="radio" name="blackTerminal" value="POS3" /> POS3</label>
+</div>
+
+<button id="clipBlackBtn">Clip Black Lead</button>
+<div id="blackClipStatus">Black lead not clipped yet.</div>
+
+
+<br>
+
+<button id="testSwitchBtn" class="test-switch-btn">Throw Crossing Test Switch</button>
+<div id="crossingStatus">Crossing Status: GATE NORMAL</div>
+
+<br>
+
+
+<button id="goldNutBtn">Open Test Nut</button>
+<div id="nutStatus">Nut is closed.</div>
+
+<br>
+
+<button id="unclipLeadsBtn">Unclip Leads</button>
+<button id="resetFuseBtn">Reset Meter Fuse</button>
+<div id="fuseIndicator" style="display:none; color:red;">Fuse Blown</div>
+
+<br>
+
+<div id="meter-override-indicator" style="display: none; color: orange; font-weight: bold;">
+  Meter Override Active
+</div>
+
+
+  </div>
+
+
+<script>
+
+let redClip = null;
+let blackClip = null;
+let testSwitchThrown = false;
+let clipsWerePlacedBeforeNutToggle = false;
+let currentMode = "volts";
+let testswttoggleState = false; // default state
+let gateStatus = "NORMAL"; // default state
+showGatePosition("up");
+let mastFlashInterval;
+let mastLightsOn = false;
+
+
+
+
+
+// START OF SUB ROUTINE SYSTEM 
+
+
+// lights on function
+
+function startMastFlashing() {
+  const left = document.getElementById("light-left");
+  const right = document.getElementById("light-right");
+
+  mastFlashInterval = setInterval(() => {
+    mastLightsOn = !mastLightsOn;
+
+    left.style.backgroundColor = mastLightsOn ? "red" : "white";
+    setTimeout(() => {
+      right.style.backgroundColor = mastLightsOn ? "white" : "red";
+    }, 005); // offset by half a second
+  }, 1000); // full cycle every second
+}
+
+// lights on function stops for flash
+
+function stopMastFlashing() {
+  clearInterval(mastFlashInterval);
+  document.getElementById("light-left").style.backgroundColor = "white";
+  document.getElementById("light-right").style.backgroundColor = "white";
+}
+
+
+// show gate function
+
+function showGatePosition(position) {
+  document.getElementById("gate-up").style.display = "none";
+  document.getElementById("gate-middle").style.display = "none";
+  document.getElementById("gate-down").style.display = "none";
+
+  document.getElementById(`gate-${position}`).style.display = "block";
+}
+
+
+// report connection when press volts and lock neg1 sub routine
+
+function reportConnectRedLead() {
+  document.getElementById("volts-display").textContent = "Volts: 0 V";
+  document.getElementById("amps-display").textContent = "Amps: --";
+ 
+}
+
+// from handle nut toggle update gate status 
+
+function updateGateStatus() {
+  testswttoggleState = testSwitchThrown; // lock in toggle state FIRST
+
+  const gateShouldDrop = nutIsOpen || testswttoggleState;
+  const crossingStatus = gateShouldDrop
+    ? "Crossing Status: GATE DOWN"
+    : "Crossing Status: GATE NORMAL";
+
+  document.getElementById("crossingStatus").textContent = crossingStatus;
+
+  if (gateShouldDrop) {
+    showGatePosition("down");
+    startMastFlashing();
+  } else {
+    showGatePosition("up");
+    stopMastFlashing();
+  }
+}
+
+
+// from handle nut toggle volts measure 
+
+function updateVoltageFromNutToggle() {
+  if (currentMode !== "volts") return;
+
+  const voltsDisplay = document.getElementById("volts-display");
+  const blackStatus = document.getElementById("blackClipStatus");
+
+  if (redClip === "POS1") {
+    voltsDisplay.textContent = "Voltage: 12V";
+  } else if ((redClip === "POS2" || redClip === "POS3") && !nutIsOpen) {
+    voltsDisplay.textContent = "Voltage: 12V";
+  } else {
+    voltsDisplay.textContent = "Voltage: 0V";
+  }
+
+  blackStatus.textContent = "Black lead auto-connected to NEG1.";
+}
+
+// from handle nut toggle current measure
+
+function updateCurrentFromNutToggle() {
+  testswttoggleState = testSwitchThrown; // store the toggle state
+
+  if (currentMode !== "amps") return;
+
+  const ampsDisplay = document.getElementById("amps-display");
+
+  // Validate clip positions and nut state
+  const redConnected = redClip === "POS1";
+  const blackConnected = blackClip === "POS3";
+  showGatePosition("up");
+
+
+  if (redConnected && blackConnected && nutIsOpen) {
+    if (gateStatus === "NORMAL" && testswttoggleState) {
+      ampsDisplay.textContent = "Current: 3A"; // Initial spike
+      gateStatus = "DOWN";
+      showGatePosition("middle");
+
+      setTimeout(() => {
+        ampsDisplay.textContent = "Current: 10A"; // Settled gate down
+        showGatePosition("down");
+      }, 5000);
+    } else if (gateStatus === "DOWN" && !testswttoggleState) {
+      ampsDisplay.textContent = "Current: 20A"; // Initial spike
+      gateStatus = "NORMAL";
+      showGatePosition("middle");
+
+
+      setTimeout(() => {
+        ampsDisplay.textContent = "Current: 7A"; // Settled gate normal
+        showGatePosition("up");
+      }, 5000);
+    } else if (gateStatus === "NORMAL" && !testswttoggleState) {
+      ampsDisplay.textContent = "Current: 7A"; // Holding normal
+    } else if (gateStatus === "DOWN" && testswttoggleState) {
+      ampsDisplay.textContent = "Current: 10A"; // Holding down
+    }
+  } else {
+    ampsDisplay.textContent = "Current: 0A";
+  }
+}
+
+// volts reading logic with toggle of nut 
+
+let nutIsOpen = false; // initial state
+
+function handleNutToggle() {
+  nutIsOpen = !nutIsOpen;
+
+  const pos2 = document.getElementById("positive2");
+  const nutStatus = document.getElementById("nutStatus");
+
+  nutStatus.textContent = nutIsOpen ? "Nut is open." : "Nut is closed.";
+  pos2.style.backgroundColor = nutIsOpen ? "#d4af37" : "#f9d976";
+  pos2.style.borderColor = nutIsOpen ? "#e6c56e" : "#b8860b";
+
+  updateVoltageFromNutToggle();
+  updateCurrentFromNutToggle();
+
+  // Only update gate if not in amps mode with POS1/POS3 clipped
+  const isAmpClipOverride = (
+    currentMode === "amps" &&
+    redClip === "POS1" &&
+    blackClip === "POS3"
+  );
+
+  if (!isAmpClipOverride) {
+    updateGateStatus();
+  }
+}
+// Handle black lead clip change for current mode	
+
+function handleBlackClipChange(newClip) {
+  blackClip = newClip;
+  blackLeadClipped = true;
+
+  if (currentMode === "amps") {
+    handleMeasureAmps(); // or updateMeasurement() if you prefer
+  }
+}
+
+  // updates voltage after clip change 
+
+  function handleClipChange(newClip) {
+  redClip = newClip;
+  redLeadClipped = true;
+
+  updateVoltageDisplay(); // ← this ensures voltage updates live
+  if (currentMode === "volts" && redLeadClipped) {
+  updateVoltageDisplay();
+}
+}
+
+// volts reading logic with toggle of nut for clip change
+
+function updateVoltageDisplay() {
+  const voltsDisplay = document.getElementById("volts-display");
+
+if (currentMode === "volts") {
+  if (redClip === "POS1") {
+    voltsDisplay.textContent = "Voltage: 12V";
+    document.getElementById("blackClipStatus").textContent = "Black lead auto-connected to NEG1.";
+  } else if ((redClip === "POS2" || redClip === "POS3") && !nutIsOpen) {
+    voltsDisplay.textContent = "Voltage: 12V";
+    document.getElementById("blackClipStatus").textContent = "Black lead auto-connected to NEG1.";
+  } else {
+    voltsDisplay.textContent = "Voltage: 0V";
+    document.getElementById("blackClipStatus").textContent = "Black lead auto-connected to NEG1.";
+  }
+
+}
+}
+
+// measure amps press buttom result reset display to 0A
+
+function handleMeasureAmps() {
+  document.getElementById("volts-display").textContent = "Voltage: --";
+  let amps = "0A";
+  let crossingStatus = "";
+ 
+}
+
+
+// mode volts or amps result for terminals display
+
+function updateMeasurement() {
+  const posSelectors = document.querySelectorAll('input[name="blackTerminal"]');
+  const container = document.getElementById("blackTerminalSelection");
+
+  if (currentMode === "volts") {
+    updateVoltageDisplay();
+
+    // Hide pos1–pos3 and container
+    posSelectors.forEach(input => {
+      input.classList.add("hidden");
+    });
+    container.classList.add("hidden");
+
+  } else if (currentMode === "amps") {
+    handleMeasureAmps();
+
+    // Show pos1–pos3 and container
+    posSelectors.forEach(input => {
+      input.classList.remove("hidden");
+    });
+    container.classList.remove("hidden");
+  }
+}
+
+
+
+
+// handle test swt toggle sub routine with nut toggle logic
+
+
+function throwTestSwitch() {
+  testSwitchThrown = !testSwitchThrown;
+
+updateGateStatus();
+updateCurrentFromNutToggle(); 
+
+const meterOverrideActive = (redClip === "POS1" && blackClip === "POS3");
+
+if (meterOverrideActive) {
+  // Only the switch drives the gate status
+  const crossingStatus = testSwitchThrown
+    ? "Crossing Status: GATE DOWN"
+    : "Crossing Status: GATE NORMAL";
+
+  document.getElementById("crossingStatus").textContent = crossingStatus;
+} else {
+  updateGateStatus(); // fallback to normal logic
+}
+
+
+  const btn = document.getElementById("testSwitchBtn");
+
+  if (testSwitchThrown) {
+    btn.classList.remove("test-switch-btn");
+    btn.classList.add("test-switch-btn-pressed");
+  } else {
+    btn.classList.remove("test-switch-btn-pressed");
+    btn.classList.add("test-switch-btn");
+  }
+
+
+
+}
+
+
+
+
+// EVENTS TO CALL SUB ROUTINES
+
+
+
+
+
+// start out blank and select measure 
+
+window.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("volts-display").textContent = "Volts: --";
+  document.getElementById("amps-display").textContent = "Amps: --";
+});
+
+// measure volts button click result
+
+document.getElementById("measureVoltsBtn").addEventListener("click", () => {
+  currentMode = "volts";
+  document.getElementById("volts-display").textContent = "Volts: 0 V";
+  document.getElementById("amps-display").textContent = "Current: --";
+  updateMeasurement(); // Re-check clips and nut
+});
+
+// red lead clip logic volts 
+
+document.getElementById("clipRedBtn").addEventListener("click", () => {
+  const selected = document.querySelector('input[name="redTerminal"]:checked');
+  const redTerminal = selected ? selected.value : null;
+
+  if (redTerminal) {
+    handleClipChange(redTerminal); // ← use your subroutine here
+    document.getElementById("clipStatus").textContent = `Red lead clipped to ${redTerminal}.`;
+  } else {
+    redLeadClipped = false;
+    document.getElementById("clipStatus").textContent = "Please select a red terminal.";
+    document.getElementById("volts-display").textContent = "Voltage: --";
+  }
+
+});
+
+// black lead clip logic volts 
+
+document.getElementById("clipBlackBtn").addEventListener("click", () => {
+  const selected = document.querySelector('input[name="blackTerminal"]:checked');
+  const blackTerminal = selected ? selected.value : null;
+
+  if (currentMode === "amps") {
+    if (blackTerminal) {
+      handleBlackClipChange(blackTerminal);
+      document.getElementById("blackClipStatus").textContent = `Black lead clipped to ${blackTerminal}.`;
+    } else {
+      blackLeadClipped = false;
+      document.getElementById("blackClipStatus").textContent = "Please select a black terminal.";
+      document.getElementById("volts-display").textContent = "Voltage: --";
+    }
+  }
+});
+
+
+// unclip leads
+
+  document.getElementById("unclipLeadsBtn").addEventListener("click", () => {
+  redClip = null; // clear red lead latch
+  document.getElementById("clipStatus").textContent = "Leads unclipped.";
+  document.getElementById("blackClipStatus").textContent = "Leads unclipped.";
+  document.getElementById("volts-display").textContent = "Voltage: 0V"; // reset volts display
+});
+
+// nut open button click
+
+document.getElementById("goldNutBtn").addEventListener("click", handleNutToggle);
+
+
+// measure amps button click
+
+document.getElementById("measureAmpsBtn").addEventListener("click", () => {
+  currentMode = "amps";
+  document.getElementById("volts-display").textContent = "Voltage: --";
+  document.getElementById("amps-display").textContent = "Current: 0 A";
+  document.getElementById("blackClipStatus").textContent = "Black lead not clipped yet";
+  document.getElementById("clipStatus").textContent = "Red lead not clipped yet";
+  updateMeasurement(); // Re-check clips and nut
+});
+
+// throw test switch button click
+
+  document.getElementById("testSwitchBtn").addEventListener("click", () => {
+  throwTestSwitch();
+});
+
+
+</script>
+
+
+</body>
+</html>
